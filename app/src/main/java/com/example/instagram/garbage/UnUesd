@@ -1,0 +1,1237 @@
+package com.example.instagram.screens
+
+import android.annotation.SuppressLint
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavOptionsBuilder
+import androidx.navigation.compose.rememberNavController
+import coil.compose.rememberAsyncImagePainter
+import com.example.instagram.NavGraphs
+import com.example.instagram.R
+import com.example.instagram.api.Resource
+import com.example.instagram.appCurrentDestinationAsState
+import com.example.instagram.destinations.Destination
+import com.example.instagram.destinations.FeedScreenDestination
+import com.example.instagram.destinations.ProfileScreenDestination
+import com.example.instagram.models.*
+import com.example.instagram.other.BottomBarDestination
+import com.example.instagram.startAppDestination
+import com.example.instagram.ui.theme.*
+import com.example.instagram.viewmodels.HomeViewModel
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.HorizontalPagerIndicator
+import com.google.accompanist.pager.rememberPagerState
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.ramcosta.composedestinations.DestinationsNavHost
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.ramcosta.composedestinations.navigation.navigate
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import timber.log.Timber
+
+
+@OptIn(ExperimentalMaterialApi::class)
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
+@Composable
+fun HomeScreenWidget(homeViewModel: HomeViewModel, navigator: DestinationsNavigator) {
+    val systemUiController = rememberSystemUiController()
+    systemUiController.setSystemBarsColor(
+        color = BackgroundColor
+    )
+    val navController = rememberNavController()
+    LaunchedEffect(key1 = true) {
+        homeViewModel.getFollowingPosts()
+    }
+    val getFollowingPostResult by homeViewModel.getFollowingPostsResult.collectAsState()
+    var currentUser: UserX? = null
+    if (getFollowingPostResult is Resource.Loading) {
+        CircularProgressIndicator()
+    } else {
+        when (getFollowingPostResult) {
+            is Resource.Success -> {
+                currentUser = getFollowingPostResult.data?.currentUser
+            }
+            is Resource.Error -> {
+                Timber.e(getFollowingPostResult.message)
+            }
+            else -> {}
+        }
+    }
+    val usernameForModalSheet = remember { mutableStateOf("") }
+    val postIdForModalSheet = remember { mutableStateOf("") }
+    val isCommentClicked = remember { mutableStateOf(false) }
+    val modalBottomSheetState =
+        rememberModalBottomSheetState(
+            initialValue = ModalBottomSheetValue.Hidden,
+            skipHalfExpanded = true
+        )
+    ModalBottomSheetLayout(
+        sheetContent = {
+            ModalBottomSheetContent(
+                navigator,
+                currentUser,
+                usernameForModalSheet,
+                postIdForModalSheet,
+                homeViewModel,
+                isCommentClicked
+            )
+        },
+        modifier = Modifier.fillMaxSize(),
+        sheetBackgroundColor = BackgroundColor,
+        sheetState = modalBottomSheetState
+    ) {
+        Scaffold(
+            floatingActionButton = {
+                IconButton(
+                    modifier = Modifier
+                        .background(FabColor, shape = CircleShape)
+                        .size(65.dp),
+                    onClick = {},
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.insta_ic),
+                        contentDescription = "Add",
+                        tint = Color.White
+                    )
+                }
+            },
+            isFloatingActionButtonDocked = true,
+            floatingActionButtonPosition = FabPosition.Center,
+            bottomBar = { BottomNavigationView(currentUser, navController) },
+            content = {
+                DestinationsNavHost(
+                    navController = navController,
+                    navGraph = NavGraphs.root,
+                    startRoute = FeedScreenDestination
+                )
+            }
+        )
+    }
+
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun FeedScreenWidget(
+    homeViewModel: HomeViewModel = hiltViewModel(),
+    navigator: DestinationsNavigator
+) {
+    val systemUiController = rememberSystemUiController()
+    systemUiController.setSystemBarsColor(
+        color = BackgroundColor
+    )
+    LaunchedEffect(key1 = true) {
+        homeViewModel.getFollowingPosts()
+    }
+    val getFollowingPostResult by homeViewModel.getFollowingPostsResult.collectAsState()
+    var listOfPosts: List<FollowingPostsItem?>? = listOf()
+    var currentUser: UserX? = null
+    if (getFollowingPostResult is Resource.Loading) {
+        CircularProgressIndicator()
+    } else {
+        when (getFollowingPostResult) {
+            is Resource.Success -> {
+                listOfPosts = getFollowingPostResult.data?.followingPosts
+                currentUser = getFollowingPostResult.data?.currentUser
+            }
+            is Resource.Error -> {
+                Timber.e(getFollowingPostResult.message)
+            }
+            else -> {}
+        }
+    }
+    var searchText by remember {
+        mutableStateOf("")
+    }
+    val usernameForModalSheet = remember { mutableStateOf("") }
+    val postIdForModalSheet = remember { mutableStateOf("") }
+    val isCommentClicked = remember { mutableStateOf(false) }
+    val modalBottomSheetState =
+        rememberModalBottomSheetState(
+            initialValue = ModalBottomSheetValue.Hidden,
+            skipHalfExpanded = true
+        )
+    val scope = rememberCoroutineScope()
+
+    Column(
+        modifier = Modifier
+            .background(BackgroundColor)
+            .padding(15.dp)
+            .fillMaxSize()
+    ) {
+        Column(
+            modifier = Modifier
+                .background(BackgroundColor)
+                .fillMaxSize()
+        ) {
+            ToolBar(modifier = Modifier)
+            Spacer(modifier = Modifier.height(10.dp))
+            StorySection(modifier = Modifier, currentUser)
+            Spacer(modifier = Modifier.height(15.dp))
+            ExplorerSection(
+                modifier = Modifier,
+                value = searchText
+            ) { searchText = it }
+            Spacer(modifier = Modifier.height(10.dp))
+            PostsSection(
+                modifier = Modifier,
+                listOfPosts,
+                homeViewModel,
+                modalBottomSheetState,
+                scope,
+                usernameForModalSheet,
+                postIdForModalSheet,
+                isCommentClicked,
+                navigator
+            )
+        }
+    }
+
+}
+
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun ModalBottomSheetContent(
+    navigator: DestinationsNavigator,
+    currentUser: UserX?,
+    usernameForModalSheet: MutableState<String>,
+    postIdForModalSheet: MutableState<String>,
+    homeViewModel: HomeViewModel,
+    isCommentClicked: MutableState<Boolean>,
+) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val (comment, setComment) = remember { mutableStateOf("") }
+    val getCommentsResult by homeViewModel.getCommentsResult.collectAsState()
+    val getCommentAddedResult by homeViewModel.getCommentAddedResult.collectAsState()
+    val listOfComments = homeViewModel.comments
+    val scrollState = rememberLazyListState()
+    val commentInserted = remember { mutableStateOf(false) }
+    val onCommentAdded: (CommentData) -> Unit = { commentData ->
+        homeViewModel.commentOnPost(postIdForModalSheet.value, commentData)
+    }
+    LaunchedEffect(isCommentClicked.value) {
+        if (isCommentClicked.value) {
+            homeViewModel.getComments(postIdForModalSheet.value)
+            isCommentClicked.value = false
+        }
+    }
+    LaunchedEffect(commentInserted.value) {
+        if (commentInserted.value && listOfComments.isNotEmpty()) {
+            scrollState.animateScrollToItem(listOfComments.lastIndex)
+        }
+        commentInserted.value = false
+    }
+    ConstraintLayout(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        if (getCommentsResult is Resource.Loading) {
+            CircularProgressIndicator()
+        } else {
+            when (getCommentsResult) {
+                is Resource.Success -> {
+
+                }
+                is Resource.Error -> {
+                    Timber.e(getCommentsResult.message)
+                }
+                else -> {}
+            }
+        }
+        when (getCommentAddedResult) {
+            is Resource.Success -> {
+                commentInserted.value = true
+            }
+            is Resource.Error -> {
+                Timber.e(getCommentAddedResult.message)
+            }
+            else -> {}
+        }
+
+        val (commentsList, commentBox, divider) = createRefs()
+        Divider(
+            color = Color.LightGray,
+            thickness = 0.5.dp,
+            modifier = Modifier.constrainAs(divider) {
+                top.linkTo(parent.top)
+                start.linkTo(parent.start)
+            })
+
+        if (listOfComments.isEmpty()) {
+            Text(
+                text = "no comments",
+                modifier = Modifier.constrainAs(commentsList) {
+                    top.linkTo(parent.top)
+                    start.linkTo(parent.start)
+                    bottom.linkTo(parent.bottom)
+                    end.linkTo(parent.end)
+                }
+            )
+        } else {
+            Column(modifier = Modifier
+                .constrainAs(commentsList) {
+                    top.linkTo(divider.bottom)
+                    start.linkTo(parent.start)
+                    bottom.linkTo(commentBox.top)
+                })
+            {
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(bottom = 25.dp, start = 15.dp, end = 15.dp, top = 30.dp),
+                    state = scrollState
+                ) {
+                    items(listOfComments) {
+                        CommentItem(
+                            it,
+                            homeViewModel,
+                            currentUser?.isAdmin,
+                        )
+                    }
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .constrainAs(commentBox) {
+                        bottom.linkTo(parent.bottom)
+                        start.linkTo(parent.start)
+                    }
+            ) {
+                Divider(
+                    color = Color.LightGray,
+                    thickness = 0.5.dp,
+                    modifier = Modifier.offset(y = (6).dp)
+                )
+                Row(
+                    modifier = Modifier
+                        .padding(start = 15.dp, end = 15.dp, bottom = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = rememberAsyncImagePainter(model = currentUser?.avatar),
+                        contentDescription = "Profile Image",
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(CircleShape)
+                    )
+                    TextField(
+                        value = comment,
+                        onValueChange = setComment,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 10.dp),
+                        placeholder = {
+                            Text(
+                                text = "Add a comment for ${usernameForModalSheet.value}...",
+                                fontSize = 10.sp,
+                                color = Color.Black,
+                            )
+                        },
+                        colors = TextFieldDefaults.textFieldColors(
+                            textColor = Color.Black,
+                            disabledTextColor = ExplorerColor,
+                            backgroundColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                            cursorColor = ExplorerColor
+                        ),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Send,
+                            keyboardType = KeyboardType.Text
+                        ),
+                        keyboardActions = KeyboardActions {
+                            onCommentAdded(CommentData(comment))
+                            setComment("")
+                            keyboardController?.hide()
+                        }
+                    )
+                    Button(
+                        onClick = {
+                            onCommentAdded(CommentData(comment))
+                            setComment("")
+                            keyboardController?.hide()
+                        },
+                        modifier = Modifier
+                            .padding(start = 8.dp),
+                        enabled = comment.trim().isNotEmpty(),
+                        elevation = null,
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = if (comment.trim()
+                                    .isNotEmpty()
+                            ) Color.Transparent else Color.Unspecified,
+                            disabledBackgroundColor = Color.Transparent,
+                            contentColor = Color(0xFF2691DC)
+                        ),
+                    ) {
+                        Text(text = "Post")
+                    }
+                }
+
+            }
+        }
+    }
+}
+
+
+@Composable
+fun CommentItem(comment: CommentsItem?, homeViewModel: HomeViewModel, admin: Boolean?) {
+    val liked = remember { mutableStateOf(comment?.liked) }
+    val likes = remember { mutableStateOf(comment?.likes?.size) }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Image(
+                painter = rememberAsyncImagePainter(model = comment?.postedBy?.avatar),
+                contentDescription = null,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .size(30.dp)
+                    .clickable { }
+            )
+            Column(modifier = Modifier.padding(start = 15.dp)) {
+                Row(
+                    modifier = Modifier,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = comment?.postedBy?.username!!,
+                        fontSize = 12.sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (admin == true) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            painter = painterResource(id = R.drawable.protection),
+                            contentDescription = "admin",
+                            modifier = Modifier
+                                .size(15.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = comment.createdAt!!,
+                        fontSize = 10.sp,
+                        color = IconsColor,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                Text(
+                    text = comment?.comment!!,
+                    fontSize = 13.sp,
+                    color = PostColor
+                )
+            }
+        }
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.heart_filled),
+                contentDescription = "Share Icon",
+                tint = if (liked.value!!) Color.Red else Color.Black,
+                modifier = Modifier
+                    .size(18.dp)
+                    .clickable {
+
+                        homeViewModel.likeOrUnlikeComment(comment?._id!!)
+                        if (liked.value!!) {
+                            likes.value = likes.value!! - 1
+                            liked.value = !liked.value!!
+                        } else {
+                            likes.value = likes.value!! + 1
+                            liked.value = !liked.value!!
+                        }
+                    }
+            )
+            if (likes.value!! > 0) {
+                Spacer(modifier = Modifier.height(3.dp))
+                Text(
+                    text = likes.value.toString(),
+                    fontSize = 13.sp
+                )
+            }
+        }
+    }
+}
+
+/*********************** end of ModalBottomSheetContent *******************/
+
+@Composable
+fun ToolBar(modifier: Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 20.dp, end = 20.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.toolbar_plus),
+            contentDescription = "Add Icon",
+            modifier = Modifier.clickable {
+
+            }
+        )
+        Icon(
+            painter = painterResource(id = R.drawable.instagram_logo),
+            contentDescription = "Instagram"
+        )
+        if (0 > 0) {
+            BadgedBox(
+                badge = {
+                    Badge {
+                        Text(
+                            text = "0",
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                },
+            ) {
+                Icon(
+                    painterResource(id = R.drawable.chat),
+                    contentDescription = "Chat Icon",
+                    modifier = Modifier.clickable {
+
+                    }
+                )
+            }
+        } else {
+            Icon(
+                painterResource(id = R.drawable.chat),
+                contentDescription = "Chat Icon",
+                modifier = Modifier.clickable {
+
+                }
+            )
+        }
+    }
+}
+
+/*********************** end of toolBar *******************/
+
+@Composable
+fun StorySection(modifier: Modifier, currentUser: UserX?) {
+    LazyRow(
+        modifier = modifier
+            .fillMaxWidth()
+    ) {
+        items(1) {
+            if (it == 0) {
+                UserStoryItem(modifier = Modifier, currentUser)
+            }
+            if (true == false) {
+                FriendStoryItem(modifier = Modifier, index = it)
+            }
+        }
+    }
+}
+
+@Composable
+fun UserStoryItem(modifier: Modifier, currentUser: UserX?) {
+    Box(
+        modifier = modifier
+            .padding(end = 15.dp)
+    ) {
+        Image(
+            painter = rememberAsyncImagePainter(model = currentUser?.avatar),
+            contentDescription = null,
+            modifier = modifier
+                .border(
+                    width = 2.dp,
+                    brush = if (true == false) UserStoryBorder else UserNotStoryBorder,
+                    shape = CircleShape
+                )
+                .padding(3.dp)
+                .size(70.dp)
+                .clip(CircleShape)
+        )
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .offset(y = 8.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .border(width = 2.dp, color = BackgroundColor, shape = CircleShape)
+                    .padding(2.dp)
+                    .size(18.dp)
+                    .align(Alignment.BottomCenter)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Icon Add",
+                    tint = BackgroundColor,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(brush = UserStoryBorder)
+                        .fillMaxSize()
+                )
+            }
+
+        }
+    }
+
+}
+
+@Composable
+fun FriendStoryItem(modifier: Modifier, index: Int) {
+    Column(
+        modifier = modifier
+            .padding(end = 15.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = rememberAsyncImagePainter(model = "https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8aHVtYW58ZW58MHx8MHx8&w=1000&q=80"),
+            contentDescription = null,
+            modifier = Modifier
+                .border(
+                    width = 2.dp,
+                    brush = UserStoryBorder,
+                    shape = CircleShape
+                )
+                .padding(3.dp)
+                .size(70.dp)
+                .clip(CircleShape)
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "ahmed",
+            color = NameColor,
+            fontSize = 10.sp,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+        )
+    }
+
+}
+
+/*********************** end of storySection *******************/
+
+@Composable
+fun ExplorerSection(modifier: Modifier, value: String, onValueChange: (String) -> Unit) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Explorer",
+            fontSize = 23.sp,
+            fontWeight = FontWeight.Bold,
+            color = ExplorerColor
+        )
+        CustomTextField(
+            value = value,
+            onValueChange = onValueChange,
+            leadingIcon = painterResource(id = R.drawable.search_ic),
+            modifier = Modifier
+        )
+    }
+}
+
+
+@Composable
+fun CustomTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    leadingIcon: Painter,
+    modifier: Modifier
+) {
+    TextField(
+        modifier = modifier
+            .fillMaxWidth(0.7f)
+            .height(48.dp),
+        maxLines = 1,
+        textStyle = TextStyle(fontSize = 14.sp),
+        value = value,
+        onValueChange = onValueChange,
+        leadingIcon = {
+            Icon(
+                painter = leadingIcon,
+                contentDescription = null,
+            )
+        },
+        shape = RoundedCornerShape(30.dp),
+        colors = TextFieldDefaults.textFieldColors(
+            textColor = ExplorerColor,
+            disabledTextColor = ExplorerColor,
+            backgroundColor = Color.White,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
+            cursorColor = ExplorerColor
+        )
+    )
+}
+
+/*********************** end of explorerSection *******************/
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun PostsSection(
+    modifier: Modifier,
+    listOfPosts: List<FollowingPostsItem?>?,
+    homeViewModel: HomeViewModel,
+    sheetState: ModalBottomSheetState,
+    scope: CoroutineScope,
+    usernameForModalSheet: MutableState<String>,
+    postIdForModalSheet: MutableState<String>,
+    isCommentClicked: MutableState<Boolean>,
+    navigator: DestinationsNavigator,
+) {
+    if (listOfPosts?.isEmpty() == true) {
+        Text(text = "no posts")
+    } else {
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+        ) {
+            items(listOfPosts!!.size) {
+                PostItem(
+                    modifier = Modifier
+                        .padding(bottom = 12.dp),
+                    index = it,
+                    listOfPosts,
+                    homeViewModel,
+                    sheetState,
+                    scope,
+                    usernameForModalSheet,
+                    postIdForModalSheet,
+                    isCommentClicked,
+                    navigator
+                )
+            }
+            item {
+                Spacer(modifier = Modifier.height(64.dp))
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun PostItem(
+    modifier: Modifier,
+    index: Int,
+    listOfPosts: List<FollowingPostsItem?>,
+    homeViewModel: HomeViewModel,
+    sheetState: ModalBottomSheetState,
+    scope: CoroutineScope,
+    usernameForModalSheet: MutableState<String>,
+    postIdForModalSheet: MutableState<String>,
+    isCommentClicked: MutableState<Boolean>,
+    navigator: DestinationsNavigator,
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
+        elevation = 0.dp,
+        shape = RoundedCornerShape(30.dp),
+        backgroundColor = Color.White
+    ) {
+        Column(
+            modifier = Modifier
+        ) {
+            val post = listOfPosts[index]
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 10.dp, horizontal = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Image(
+                        painter = rememberAsyncImagePainter(model = post?.postedBy?.avatar),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .size(50.dp, 50.dp)
+                            .clickable { navigator.navigate(ProfileScreenDestination(userId = post?.postedBy?._id!!)) }
+                    )
+                    Column(modifier = Modifier.padding(start = 15.dp)) {
+                        Text(
+                            text = post?.postedBy?.username!!,
+                            fontSize = 15.sp,
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = post.createdAt!!,
+                            fontSize = 10.sp,
+                            color = PostColor
+                        )
+                    }
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.share_ic),
+                        contentDescription = "Share Icon",
+                        tint = IconsColor,
+                        modifier = Modifier.padding(end = 15.dp)
+                    )
+                    Icon(
+                        painter = painterResource(id = R.drawable.four_dots_ic),
+                        contentDescription = "Share Icon",
+                        tint = IconsColor
+                    )
+                }
+            }
+            ImageSlider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
+                    .padding(end = 10.dp, start = 10.dp, bottom = 10.dp),
+                sliderList = post?.imageOrVideoUrl,
+                likes = post?.likes!!.size,
+                post.liked,
+                homeViewModel,
+                post._id!!,
+                post.postedBy?.username!!,
+                sheetState,
+                scope,
+                usernameForModalSheet,
+                postIdForModalSheet,
+                isCommentClicked
+            )
+            Column(
+                modifier = Modifier
+                    .padding(vertical = 5.dp, horizontal = 20.dp),
+            ) {
+                if (post.caption != null) {
+                    TextComment(
+                        modifier = Modifier,
+                        name = post.postedBy.username,
+                        description = post.caption
+                    )
+                }
+            }
+        }
+    }
+
+}
+
+@OptIn(ExperimentalPagerApi::class, ExperimentalMaterialApi::class)
+@Composable
+fun ImageSlider(
+    modifier: Modifier,
+    sliderList: List<String?>?,
+    likes: Int,
+    liked: Boolean?,
+    homeViewModel: HomeViewModel,
+    postId: String,
+    postedByUserName: String,
+    sheetState: ModalBottomSheetState,
+    scope: CoroutineScope,
+    usernameForModalSheet: MutableState<String>,
+    postIdForModalSheet: MutableState<String>,
+    isCommentClicked: MutableState<Boolean>,
+
+    ) {
+    var likesState by remember { mutableStateOf(likes) }
+    var likedState by remember { mutableStateOf(liked) }
+    when (sliderList!!.size) {
+        1 -> {
+            Box(
+                modifier = modifier
+                    .clip(RoundedCornerShape(30.dp)),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    Image(
+                        painter = rememberAsyncImagePainter(sliderList.first()),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                    )
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(start = 22.dp, bottom = 33.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.heart_filled),
+                                contentDescription = "Like Icon",
+                                tint = if (likedState == true) Color.White else Color.Black,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .drawBehind {
+                                        drawCircle(
+                                            color = Color(0XFFFC0B7B),
+                                            radius = this.size.maxDimension
+                                        )
+                                    }
+                                    .clickable {
+                                        if (likedState == true) {
+                                            likesState--
+                                            likedState = false
+                                        } else {
+                                            likesState++
+                                            likedState = true
+                                        }
+                                        homeViewModel.likeOrUnlikePost(postId)
+                                    }
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .padding(start = 15.dp)
+                            ) {
+                                Text(
+                                    text = likesState.toString(),
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    modifier = Modifier
+                                        .background(
+                                            color = Color(0XFF181818).copy(ContentAlpha.disabled),
+                                            shape = RoundedCornerShape(1000.dp)
+                                        )
+                                        .padding(horizontal = 13.dp)
+                                )
+                            }
+
+                        }
+                    }
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(end = 22.dp, bottom = 33.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.chat),
+                            contentDescription = "Like Icon",
+                            tint = Color.Black,
+                            modifier = Modifier
+                                .size(20.dp)
+                                .drawBehind {
+                                    drawCircle(
+                                        color = Color.White,
+                                        radius = this.size.maxDimension
+                                    )
+                                }
+                                .clickable {
+                                    scope.launch {
+                                        usernameForModalSheet.value = postedByUserName
+                                        postIdForModalSheet.value = postId
+                                        isCommentClicked.value = true
+                                        Timber.e(isCommentClicked.value.toString())
+                                        sheetState.show()
+                                    }
+                                }
+                        )
+                    }
+
+                }
+            }
+        }
+        else -> {
+            val pagerState = rememberPagerState()
+            Box(
+                modifier = modifier
+                    .clip(RoundedCornerShape(30.dp))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    HorizontalPager(
+                        state = pagerState,
+                        count = sliderList.size,
+                        modifier = Modifier
+                            .fillMaxSize()
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter(sliderList[it]),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxSize()
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 25.dp, end = 15.dp)
+                    ) {
+                        Text(
+                            text = "${pagerState.currentPage + 1}/${pagerState.pageCount}",
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            modifier = Modifier
+                                .background(
+                                    color = Color(0XFF181818).copy(ContentAlpha.disabled),
+                                    shape = RoundedCornerShape(1000.dp)
+                                )
+                                .padding(horizontal = 13.dp)
+                        )
+                    }
+                    HorizontalPagerIndicator(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 19.dp),
+                        pagerState = pagerState,
+                        spacing = 8.dp,
+                        activeColor = Color.White,
+                    )
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(start = 22.dp, bottom = 33.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.heart_filled),
+                                contentDescription = "Like Icon",
+                                tint = if (likedState == true) Color.White else Color.Black,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .drawBehind {
+                                        drawCircle(
+                                            color = Color(0XFFFC0B7B),
+                                            radius = this.size.maxDimension
+                                        )
+                                    }
+                                    .clickable {
+                                        if (likedState == true) {
+                                            likesState--
+                                            likedState = false
+                                        } else {
+                                            likesState++
+                                            likedState = true
+                                        }
+                                        homeViewModel.likeOrUnlikePost(postId)
+                                    }
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .padding(start = 15.dp)
+                            ) {
+                                Text(
+                                    text = likes.toString(),
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    modifier = Modifier
+                                        .background(
+                                            color = Color(0XFF181818).copy(ContentAlpha.disabled),
+                                            shape = RoundedCornerShape(1000.dp)
+                                        )
+                                        .padding(horizontal = 13.dp)
+                                )
+                            }
+
+                        }
+                    }
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(end = 22.dp, bottom = 33.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.chat),
+                            contentDescription = "Like Icon",
+                            tint = Color.Black,
+                            modifier = Modifier
+                                .size(20.dp)
+                                .drawBehind {
+                                    drawCircle(
+                                        color = Color.White,
+                                        radius = this.size.maxDimension
+                                    )
+                                }
+                                .clickable {
+                                    usernameForModalSheet.value = postedByUserName
+                                    postIdForModalSheet.value = postId
+                                    isCommentClicked.value = true
+                                    scope.launch {
+                                        usernameForModalSheet.value = postedByUserName
+                                        postIdForModalSheet.value = postId
+                                        sheetState.show()
+                                    }
+                                }
+                        )
+                    }
+                }
+            }
+
+        }
+    }
+}
+
+@Composable
+fun TextComment(modifier: Modifier, name: String, description: String) {
+    Text(
+        text = buildAnnotatedString {
+            withStyle(
+                SpanStyle(
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp
+                )
+            ) {
+                append("$name : ")
+            }
+            withStyle(
+                SpanStyle(
+                    color = Color.Black,
+                    fontSize = 11.sp
+                )
+            ) {
+                append(description)
+            }
+        },
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier
+    )
+
+}
+
+/*********************** end of postsSection *******************/
+
+@Composable
+fun BottomNavigationView(currentUser: UserX?, navController: NavController) {
+    val currentDestination: Destination = navController.appCurrentDestinationAsState().value
+        ?: NavGraphs.root.startAppDestination
+    BottomNavigation(
+        modifier = Modifier
+            .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)),
+        backgroundColor = Color.White,
+        elevation = 22.dp
+    ) {
+        BottomBarDestination.values().forEach { destination ->
+            BottomNavigationItem(
+                selectedContentColor = BottomColorIcon,
+                unselectedContentColor = IconsColorBottom,
+                selected = currentDestination == destination.direction,
+                onClick = {
+                    if (destination.direction != currentDestination) {
+                        navController.navigate(destination.direction, fun NavOptionsBuilder.() {
+                            launchSingleTop = true
+                        })
+                    }
+                },
+                icon = {
+                    Icon(
+                        painter = painterResource(id = destination.icon),
+                        contentDescription = null
+                    )
+                },
+            )
+        }
+        BottomNavigationItem(
+            selected = currentDestination == ProfileScreenDestination,
+            onClick = {
+                if (currentDestination != ProfileScreenDestination) {
+                    navController.navigate(
+                        ProfileScreenDestination(userId = currentUser?._id!!),
+                        fun NavOptionsBuilder.() {
+                            launchSingleTop = true
+                        })
+                }
+            },
+            icon = {
+                Icon(
+                    painter = rememberAsyncImagePainter(model = currentUser?.avatar),
+                    contentDescription = "Profile",
+                    modifier = Modifier
+                        .border(
+                            width = if (currentDestination == ProfileScreenDestination) 1.5.dp else 0.dp,
+                            brush = if (currentDestination == ProfileScreenDestination) UserStoryBorder else Brush.verticalGradient(
+                                listOf(
+                                    Color.White,
+                                    Color.White,
+                                )
+                            ),
+                            shape = CircleShape
+                        )
+                        .padding(if (currentDestination == ProfileScreenDestination) 3.dp else 0.dp)
+                        .size(27.dp)
+                        .clip(CircleShape),
+                    tint = Color.Unspecified
+                )
+            },
+        )
+    }
+}
+
+/*********************** end of bottomNavigationView *******************/
+
+CropProperties(
+                    CropType.Dynamic,
+                    1.5.dp,
+                    aspectRatios[3].aspectRatio,
+                    ContentScale.Fit,
+                    CropOutlineProperty(OutlineType.Rect,RectCropShape(0, "1:1")),
+                    false, false, false, true, 2f
+                )
