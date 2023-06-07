@@ -3,8 +3,8 @@ package com.example.instagram.di
 import android.content.Context
 import com.example.instagram.api.ApiServices
 import com.example.instagram.api.AuthInterceptor
-import com.example.instagram.garbage.other.MyPreference
-import com.example.instagram.garbage.other.NoRippleInteractionSource
+import com.example.instagram.other.MyPreference
+import com.example.instagram.other.NoRippleInteractionSource
 import com.example.instagram.pagination.CommentsPagingSource
 import com.example.instagram.pagination.CommentsPagingSource_Factory
 import com.example.instagram.pagination.FollowingPostsPagingSource

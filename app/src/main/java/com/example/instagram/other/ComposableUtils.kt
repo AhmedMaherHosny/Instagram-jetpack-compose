@@ -1,4 +1,4 @@
-package com.example.instagram.garbage.other
+package com.example.instagram.other
 
 import android.Manifest
 import android.os.Build

@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.sp
 import com.example.instagram.api.Resource
 import com.example.instagram.destinations.HomeScreenDestination
 import com.example.instagram.models.LoginData
-import com.example.instagram.garbage.other.CustomSnackBarError
+import com.example.instagram.other.CustomSnackBarError
 import com.example.instagram.ui.theme.BackgroundColor
 import com.example.instagram.viewmodels.LoginViewModel
 import com.google.accompanist.systemuicontroller.rememberSystemUiController

@@ -1,4 +1,4 @@
-package com.example.instagram.garbage.other
+package com.example.instagram.other
 
 object Constants {
     const val SHARED_PREFERENCES_NAME = "SHARED_PREFERENCES_NAME"

@@ -58,8 +58,8 @@ import com.example.instagram.api.Resource
 import com.example.instagram.destinations.ProfileScreenDestination
 import com.example.instagram.models.CommentData
 import com.example.instagram.models.CommentsItem
-import com.example.instagram.garbage.other.LoadingItem
-import com.example.instagram.garbage.other.currentUser
+import com.example.instagram.other.LoadingItem
+import com.example.instagram.other.currentUser
 import com.example.instagram.ui.theme.BackgroundColor
 import com.example.instagram.ui.theme.ExplorerColor
 import com.example.instagram.ui.theme.IconsColor

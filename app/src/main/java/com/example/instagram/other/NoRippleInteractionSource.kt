@@ -1,4 +1,4 @@
-package com.example.instagram.garbage.other
+package com.example.instagram.other
 
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource

@@ -1,4 +1,4 @@
-package com.example.instagram.garbage.other
+package com.example.instagram.other
 
 import android.graphics.Bitmap
 import android.graphics.Canvas

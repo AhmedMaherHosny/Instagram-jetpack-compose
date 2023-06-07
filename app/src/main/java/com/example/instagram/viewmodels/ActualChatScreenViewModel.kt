@@ -10,7 +10,7 @@ import com.example.instagram.api.Resource
 import com.example.instagram.models.AppUser
 import com.example.instagram.models.GetAllMessagesResponse
 import com.example.instagram.models.Message
-import com.example.instagram.garbage.other.NoRippleInteractionSource
+import com.example.instagram.other.NoRippleInteractionSource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -1,6 +1,6 @@
 package com.example.instagram.api
 
-import com.example.instagram.garbage.other.MyPreference
+import com.example.instagram.other.MyPreference
 import okhttp3.Interceptor
 import okhttp3.Response
 

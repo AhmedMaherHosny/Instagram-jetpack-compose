@@ -48,11 +48,11 @@ import coil.compose.AsyncImage
 import com.example.instagram.R
 import com.example.instagram.api.Resource
 import com.example.instagram.destinations.ProfileScreenDestination
-import com.example.instagram.garbage.other.MessageStatus
-import com.example.instagram.garbage.other.ReceivedMessageRow
-import com.example.instagram.garbage.other.SentMessageRow
-import com.example.instagram.garbage.other.currentUser
-import com.example.instagram.garbage.other.noRippleClickable
+import com.example.instagram.other.MessageStatus
+import com.example.instagram.other.ReceivedMessageRow
+import com.example.instagram.other.SentMessageRow
+import com.example.instagram.other.currentUser
+import com.example.instagram.other.noRippleClickable
 import com.example.instagram.models.UserX
 import com.example.instagram.ui.theme.IconsColor
 import com.example.instagram.ui.theme.SendMessage

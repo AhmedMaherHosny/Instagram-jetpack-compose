@@ -14,9 +14,9 @@ import com.example.instagram.api.Resource
 import com.example.instagram.models.CommentData
 import com.example.instagram.models.CommentsItem
 import com.example.instagram.models.UserX
-import com.example.instagram.garbage.other.MyPreference
-import com.example.instagram.garbage.other.NoRippleInteractionSource
-import com.example.instagram.garbage.other.currentUser
+import com.example.instagram.other.MyPreference
+import com.example.instagram.other.NoRippleInteractionSource
+import com.example.instagram.other.currentUser
 import com.example.instagram.pagination.CommentsPagingSource
 import com.example.instagram.pagination.FollowingPostsPagingSource
 import dagger.assisted.AssistedFactory

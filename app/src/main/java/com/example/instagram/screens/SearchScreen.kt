@@ -42,7 +42,7 @@ import coil.compose.AsyncImage
 import com.example.instagram.R
 import com.example.instagram.destinations.ProfileScreenDestination
 import com.example.instagram.models.UserX
-import com.example.instagram.garbage.other.NoRippleInteractionSource
+import com.example.instagram.other.NoRippleInteractionSource
 import com.example.instagram.ui.theme.BackgroundColor
 import com.example.instagram.ui.theme.ExplorerColor
 import com.example.instagram.ui.theme.NameColor

@@ -41,8 +41,8 @@ import com.example.instagram.destinations.ChatScreenDestination
 import com.example.instagram.destinations.CommentsScreenDestination
 import com.example.instagram.destinations.ProfileScreenDestination
 import com.example.instagram.models.*
-import com.example.instagram.garbage.other.LoadingItem
-import com.example.instagram.garbage.other.NoRippleInteractionSource
+import com.example.instagram.other.LoadingItem
+import com.example.instagram.other.NoRippleInteractionSource
 import com.example.instagram.ui.theme.*
 import com.example.instagram.viewmodels.HomeViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi

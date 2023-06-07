@@ -42,9 +42,9 @@ import com.example.instagram.destinations.FeedScreenDestination
 import com.example.instagram.destinations.NewPostSelectScreenDestination
 import com.example.instagram.destinations.NewProfileSelectScreenDestination
 import com.example.instagram.destinations.ProfileScreenDestination
-import com.example.instagram.garbage.other.BottomBarDestination
-import com.example.instagram.garbage.other.NoRippleInteractionSource
-import com.example.instagram.garbage.other.currentUser
+import com.example.instagram.other.BottomBarDestination
+import com.example.instagram.other.NoRippleInteractionSource
+import com.example.instagram.other.currentUser
 import com.example.instagram.startAppDestination
 import com.example.instagram.ui.theme.BackgroundColor
 import com.example.instagram.ui.theme.BottomColorIcon

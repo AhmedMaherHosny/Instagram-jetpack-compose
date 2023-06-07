@@ -1,4 +1,4 @@
-package com.example.instagram.garbage.other
+package com.example.instagram.other
 
 import com.example.instagram.R
 import com.example.instagram.destinations.*

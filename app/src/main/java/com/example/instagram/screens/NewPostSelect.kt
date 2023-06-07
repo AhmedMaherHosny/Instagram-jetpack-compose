@@ -60,8 +60,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.instagram.destinations.NewPostScreenDestination
-import com.example.instagram.garbage.other.MediaPermissions
-import com.example.instagram.garbage.other.imageBitmapTemp
+import com.example.instagram.other.MediaPermissions
+import com.example.instagram.other.imageBitmapTemp
 import com.example.instagram.viewmodels.PostViewModel
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator

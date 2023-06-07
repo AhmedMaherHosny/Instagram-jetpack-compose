@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.instagram.api.ApiServices
 import com.example.instagram.api.Resource
 import com.example.instagram.models.RegisterData
-import com.example.instagram.garbage.other.MyPreference
-import com.example.instagram.garbage.other.NoRippleInteractionSource
+import com.example.instagram.other.MyPreference
+import com.example.instagram.other.NoRippleInteractionSource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow
