@@ -13,11 +13,6 @@ import java.io.File
 import java.io.FileOutputStream
 
 
-fun <T> SnapshotStateList<T>.swapList(newList: List<T>){
-    clear()
-    addAll(newList)
-}
-
 var currentUser: UserX? = null
 var imageBitmapTemp: ImageBitmap? = null
 var imageBitmapTempProfile: ImageBitmap? = null

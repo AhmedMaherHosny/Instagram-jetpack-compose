@@ -86,16 +86,21 @@ fun LoadingItem() {
 }
 
 
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MediaPermissions(comp: @Composable () -> Unit) {
+    val perm13 = listOf(
+        Manifest.permission.READ_MEDIA_IMAGES,
+        Manifest.permission.READ_MEDIA_VIDEO,
+        Manifest.permission.CAMERA,
+    )
+    val perm12 = listOf(
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        Manifest.permission.CAMERA,
+    )
     val permissionsState = rememberMultiplePermissionsState(
-        permissions = listOf(
-            Manifest.permission.READ_MEDIA_IMAGES,
-            Manifest.permission.READ_MEDIA_VIDEO,
-            Manifest.permission.CAMERA,
-        )
+        permissions = if (Build.VERSION.SDK_INT >= 33) perm13 else perm12
     )
     var showDialog by remember { mutableStateOf(true) }
     when {
