@@ -69,4 +69,16 @@ interface ApiServices {
         @Part image: MultipartBody.Part,
         @Part("username") username: RequestBody
     ): Response<AppUser>
+
+    @GET("/api/chat")
+    suspend fun getAllChats(): Response<GetAllChatsResponse>
+
+    @GET("/api/profile/header/{id}")
+    suspend fun getChatHeaderById(@Path("id") id: String): Response<AppUser>
+
+    @GET("/api/message/{id}")
+    suspend fun getAllMessagesByChatId(@Path("id") id: String): Response<GetAllMessagesResponse>
+    @FormUrlEncoded
+    @POST("/api/message/")
+    suspend fun addMessage(@Field("chatId") chatId: String, @Field("content") content: String): Response<MessageHold>
 }

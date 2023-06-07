@@ -23,7 +23,7 @@ import com.example.instagram.api.Resource
 import com.example.instagram.destinations.HomeScreenDestination
 import com.example.instagram.destinations.LoginScreenDestination
 import com.example.instagram.models.RegisterData
-import com.example.instagram.other.CustomSnackBarError
+import com.example.instagram.garbage.other.CustomSnackBarError
 import com.example.instagram.ui.theme.BackgroundColor
 import com.example.instagram.ui.theme.FabColor
 import com.example.instagram.viewmodels.RegisterViewModel

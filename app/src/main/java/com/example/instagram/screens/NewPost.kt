@@ -43,8 +43,8 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import coil.compose.AsyncImage
 import com.example.instagram.api.Resource
 import com.example.instagram.destinations.HomeScreenDestination
-import com.example.instagram.other.currentUser
-import com.example.instagram.other.imageBitmapTemp
+import com.example.instagram.garbage.other.currentUser
+import com.example.instagram.garbage.other.imageBitmapTemp
 import com.example.instagram.ui.theme.DividerColor
 import com.example.instagram.ui.theme.ExplorerColor
 import com.example.instagram.ui.theme.IconsColorBottom

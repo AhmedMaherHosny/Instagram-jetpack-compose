@@ -33,6 +33,8 @@ import com.example.instagram.NavGraphs
 import com.example.instagram.R
 import com.example.instagram.api.Resource
 import com.example.instagram.appCurrentDestinationAsState
+import com.example.instagram.destinations.ActualChatScreenDestination
+import com.example.instagram.destinations.ChatScreenDestination
 import com.example.instagram.destinations.CommentsScreenDestination
 import com.example.instagram.destinations.Destination
 import com.example.instagram.destinations.EditProfileScreenDestination
@@ -40,9 +42,9 @@ import com.example.instagram.destinations.FeedScreenDestination
 import com.example.instagram.destinations.NewPostSelectScreenDestination
 import com.example.instagram.destinations.NewProfileSelectScreenDestination
 import com.example.instagram.destinations.ProfileScreenDestination
-import com.example.instagram.other.BottomBarDestination
-import com.example.instagram.other.NoRippleInteractionSource
-import com.example.instagram.other.currentUser
+import com.example.instagram.garbage.other.BottomBarDestination
+import com.example.instagram.garbage.other.NoRippleInteractionSource
+import com.example.instagram.garbage.other.currentUser
 import com.example.instagram.startAppDestination
 import com.example.instagram.ui.theme.BackgroundColor
 import com.example.instagram.ui.theme.BottomColorIcon
@@ -91,6 +93,8 @@ fun HomeScreenWidget(
     val showFabAndBottomBar = currentDestination !is CommentsScreenDestination
             && currentDestination !is EditProfileScreenDestination
             && currentDestination !is NewProfileSelectScreenDestination
+            && currentDestination !is ChatScreenDestination
+            && currentDestination !is ActualChatScreenDestination
     Scaffold(
         floatingActionButton = {
             if (showFabAndBottomBar)

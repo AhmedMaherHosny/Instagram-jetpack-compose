@@ -47,9 +47,9 @@ import com.example.instagram.api.Resource
 import com.example.instagram.destinations.NewProfileSelectScreenDestination
 import com.example.instagram.destinations.ProfileScreenDestination
 import com.example.instagram.models.UserX
-import com.example.instagram.other.CustomSnackBarError
-import com.example.instagram.other.currentUser
-import com.example.instagram.other.imageBitmapTempProfile
+import com.example.instagram.garbage.other.CustomSnackBarError
+import com.example.instagram.garbage.other.currentUser
+import com.example.instagram.garbage.other.imageBitmapTempProfile
 import com.example.instagram.ui.theme.BackgroundColor
 import com.example.instagram.ui.theme.FabColor
 import com.example.instagram.ui.theme.UserStoryBorder

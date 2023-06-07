@@ -37,11 +37,12 @@ import androidx.paging.compose.items
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.example.instagram.R
+import com.example.instagram.destinations.ChatScreenDestination
 import com.example.instagram.destinations.CommentsScreenDestination
 import com.example.instagram.destinations.ProfileScreenDestination
 import com.example.instagram.models.*
-import com.example.instagram.other.LoadingItem
-import com.example.instagram.other.NoRippleInteractionSource
+import com.example.instagram.garbage.other.LoadingItem
+import com.example.instagram.garbage.other.NoRippleInteractionSource
 import com.example.instagram.ui.theme.*
 import com.example.instagram.viewmodels.HomeViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -76,7 +77,7 @@ fun FeedScreenWidget(
                 .background(BackgroundColor)
                 .fillMaxSize()
         ) {
-            ToolBar(modifier = Modifier, homeViewModel.noRippleInteractionSource)
+            ToolBar(modifier = Modifier, homeViewModel.noRippleInteractionSource, navigator)
             Spacer(modifier = Modifier.height(10.dp))
 //                        StorySection(modifier = Modifier, currentUser)
             Spacer(modifier = Modifier.height(15.dp))
@@ -97,7 +98,11 @@ fun FeedScreenWidget(
 }
 
 @Composable
-fun ToolBar(modifier: Modifier, noRippleInteractionSource: NoRippleInteractionSource) {
+fun ToolBar(
+    modifier: Modifier,
+    noRippleInteractionSource: NoRippleInteractionSource,
+    navigator: DestinationsNavigator
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -138,7 +143,7 @@ fun ToolBar(modifier: Modifier, noRippleInteractionSource: NoRippleInteractionSo
                         indication = null,
                         interactionSource = noRippleInteractionSource
                     ) {
-
+                        navigator.navigate(ChatScreenDestination)
                     }
                 )
             }
@@ -150,7 +155,7 @@ fun ToolBar(modifier: Modifier, noRippleInteractionSource: NoRippleInteractionSo
                     indication = null,
                     interactionSource = noRippleInteractionSource
                 ) {
-
+                    navigator.navigate(ChatScreenDestination)
                 }
             )
         }

@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.instagram.api.ApiServices
 import com.example.instagram.models.SearchResponse
 import com.example.instagram.models.UserX
-import com.example.instagram.other.NoRippleInteractionSource
+import com.example.instagram.garbage.other.NoRippleInteractionSource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -7,6 +7,8 @@ import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.instagram.screens.ActualChatScreenWidget
+import com.example.instagram.screens.ChatScreenWidget
 import com.example.instagram.screens.CommentsScreenWidget
 import com.example.instagram.screens.EditProfileWidget
 import com.example.instagram.screens.FeedScreenWidget
@@ -22,6 +24,8 @@ import com.example.instagram.screens.SearchScreenWidget
 import com.example.instagram.screens.SplashScreenWidget
 import com.example.instagram.ui.theme.BackgroundColor
 import com.example.instagram.ui.theme.InstagramTheme
+import com.example.instagram.viewmodels.ActualChatScreenViewModel
+import com.example.instagram.viewmodels.ChatScreenViewModel
 import com.example.instagram.viewmodels.EditProfileViewModel
 import com.example.instagram.viewmodels.HomeViewModel
 import com.example.instagram.viewmodels.LoginViewModel
@@ -155,10 +159,31 @@ fun EditProfileScreen(
     EditProfileWidget(navigator, editProfileViewModel)
 }
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Destination
 @Composable
 fun NewProfileSelectScreen(
     navigator: DestinationsNavigator
 ) {
     NewProfileSelectWidget(navigator)
+}
+
+@Destination
+@Composable
+fun ChatScreen(
+    navigator: DestinationsNavigator,
+    chatScreenViewModel: ChatScreenViewModel = hiltViewModel()
+) {
+    ChatScreenWidget(navigator, chatScreenViewModel)
+}
+
+@Destination
+@Composable
+fun ActualChatScreen(
+    navigator: DestinationsNavigator,
+    actualChatScreenViewModel: ActualChatScreenViewModel = hiltViewModel(),
+    chatId: String,
+    receiverId: String
+) {
+    ActualChatScreenWidget(navigator, actualChatScreenViewModel, chatId, receiverId)
 }

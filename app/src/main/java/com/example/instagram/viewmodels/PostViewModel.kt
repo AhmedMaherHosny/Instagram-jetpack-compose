@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.instagram.api.ApiServices
 import com.example.instagram.api.Resource
 import com.example.instagram.models.NewPostResponse
-import com.example.instagram.other.convertImageBitmapsToFiles
+import com.example.instagram.garbage.other.convertImageBitmapsToFiles
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow

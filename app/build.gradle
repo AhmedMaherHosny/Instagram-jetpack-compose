@@ -107,6 +107,12 @@ dependencies {
 
     implementation 'com.github.SmartToolFactory:Compose-Cropper:0.2.3'
 
+    implementation 'androidx.compose.runtime:runtime-livedata:1.5.0-beta01'
+
+
+    implementation ('io.socket:socket.io-client:2.0.0') {
+        exclude group: 'org.json', module: 'json'
+    }
 
 }
 // Allow references to generated code
