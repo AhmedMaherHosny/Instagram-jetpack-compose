@@ -86,9 +86,9 @@ fun ActualChatScreenWidget(
     val scrollState = rememberLazyListState(initialFirstVisibleItemIndex = listOfMsgs.size)
     val messagesLoadedFirstTime = actualChatScreenViewModel.messagesLoadedFirstTime.value
     val messageInserted = actualChatScreenViewModel.messageInserted.value
-    LaunchedEffect(key1 = messagesLoadedFirstTime, listOfMsgs, messageInserted) {
+    LaunchedEffect(messagesLoadedFirstTime, listOfMsgs, messageInserted) {
         if (listOfMsgs.isNotEmpty()) {
-            scrollState.scrollToItem(
+            scrollState.animateScrollToItem(
                 index = listOfMsgs.size - 1
             )
         }

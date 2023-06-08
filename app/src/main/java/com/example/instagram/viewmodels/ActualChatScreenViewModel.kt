@@ -11,13 +11,21 @@ import com.example.instagram.models.AppUser
 import com.example.instagram.models.GetAllMessagesResponse
 import com.example.instagram.models.Message
 import com.example.instagram.other.NoRippleInteractionSource
+import com.example.instagram.other.currentUser
+import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.socket.client.IO
+import io.socket.client.Socket
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import timber.log.Timber
+import java.net.URISyntaxException
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+
 
 @HiltViewModel
 class ActualChatScreenViewModel @Inject constructor(
@@ -33,25 +41,33 @@ class ActualChatScreenViewModel @Inject constructor(
         MutableStateFlow<Resource<GetAllMessagesResponse>>(Resource.Initial())
     val getAllMessagesResult: MutableStateFlow<Resource<GetAllMessagesResponse>> get() = _getAllMessagesResult
 
-    private val _getAddMessageResult =
-        MutableStateFlow<Resource<Message>>(Resource.Initial())
-    val getAddMessageResult: MutableStateFlow<Resource<Message>> get() = _getAddMessageResult
-
     private val _allMessages = mutableStateListOf<Message>()
-    val allMessages : List<Message> = _allMessages
+    val allMessages: List<Message> = _allMessages
 
     var messageInserted = mutableStateOf(false)
         private set
     var messagesLoadedFirstTime = mutableStateOf(false)
         private set
+    private lateinit var mSocket: Socket
 
     init {
+
+        connectToSocket()
+        listenToNewMsgs()
+
         savedStateHandle.get<String>("receiverId")?.let {
             getChatHeader(it)
         }
         savedStateHandle.get<String>("chatId")?.let {
+            mSocket.emit("joinRoom", it)
             getAllMessages(it)
         }
+
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        mSocket.disconnect()
     }
 
     private fun getChatHeader(id: String) {
@@ -106,30 +122,34 @@ class ActualChatScreenViewModel @Inject constructor(
 
     fun addMessage(chatId: String, content: String) {
         viewModelScope.launch {
-            try {
-                messageInserted.value = false
-                _getAddMessageResult.value = Resource.Loading()
-                val response = async { apiServices.addMessage(chatId, content) }
-                when {
-                    response.await().isSuccessful -> {
-                        _getAddMessageResult.value =
-                            Resource.Success(response.await().body()?.message!!)
-                        _allMessages.add(response.await().body()?.message!!)
-                        messageInserted.value = true
-                    }
-
-                    else -> {
-                        val errorBody = response.await().errorBody()?.string()
-                        val errorMessage = JSONObject(errorBody!!).getString("message")
-                        _getAddMessageResult.value = Resource.Error(errorMessage)
-                    }
-                }
-            } catch (e: Exception) {
-                _getAddMessageResult.value =
-                    Resource.Error(e.message ?: "Unknown error occurred")
-            }
+            val data = mapOf(
+                "chatId" to chatId,
+                "senderId" to currentUser!!._id,
+                "content" to content,
+            )
+            mSocket.emit("message", data)
         }
     }
 
+    private fun connectToSocket() {
+        val options = IO.Options()
+        options.forceNew = true
+        try {
+            mSocket = IO.socket("http://192.168.1.15:5000", options)
+            mSocket.connect()
+        } catch (e: URISyntaxException) {
+            e.printStackTrace()
+        }
+    }
 
+    private fun listenToNewMsgs() {
+        mSocket.on("message") {
+            Timber.e(messageInserted.value.toString())
+            messageInserted.value = false
+            val gson = Gson()
+            val message = gson.fromJson(it[0].toString(), Message::class.java)
+            _allMessages.add(message) // need to fix scroll to new msg
+            messageInserted.value = true
+        }
+    }
 }
