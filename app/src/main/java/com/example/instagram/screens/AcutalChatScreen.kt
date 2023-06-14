@@ -2,7 +2,6 @@ package com.example.instagram.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
@@ -48,19 +49,20 @@ import coil.compose.AsyncImage
 import com.example.instagram.R
 import com.example.instagram.api.Resource
 import com.example.instagram.destinations.ProfileScreenDestination
+import com.example.instagram.models.UserX
+import com.example.instagram.other.DisposableEffectWithLifeCycle
 import com.example.instagram.other.MessageStatus
 import com.example.instagram.other.ReceivedMessageRow
 import com.example.instagram.other.SentMessageRow
 import com.example.instagram.other.currentUser
 import com.example.instagram.other.noRippleClickable
-import com.example.instagram.models.UserX
 import com.example.instagram.ui.theme.IconsColor
 import com.example.instagram.ui.theme.SendMessage
 import com.example.instagram.viewmodels.ActualChatScreenViewModel
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlinx.coroutines.delay
 import timber.log.Timber
-import java.util.Locale
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -74,9 +76,12 @@ fun ActualChatScreenWidget(
     systemUiController.setSystemBarsColor(
         color = Color.White
     )
-    var isChatInputFocus by remember {
-        mutableStateOf(false)
-    }
+    DisposableEffectWithLifeCycle(
+        onStop = {
+            actualChatScreenViewModel.typingFunctionality(false)
+        },
+        onResume = {}
+    )
     val keyboardController = LocalSoftwareKeyboardController.current
     var userData: UserX? = null
     val getChatHeaderResult by actualChatScreenViewModel.getChatHeaderResult.collectAsState()
@@ -102,82 +107,90 @@ fun ActualChatScreenWidget(
             )
         }
     }
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(8.dp)
-            .background(Color.White)
-            .focusable()
-            .wrapContentHeight()
-            .imePadding()
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = { keyboardController?.hide() })
-            }
+    Scaffold(
+        topBar = {
+            ChatAppBar(navigator = navigator, user = userData, actualChatScreenViewModel)
+        }
     ) {
-        ChatAppBar(navigator = navigator, user = userData)
-        if (getAllMessagesResult is Resource.Loading) {
-            CircularProgressIndicator(Modifier.padding(top = 50.dp))
-        } else {
-            when (getAllMessagesResult) {
-                is Resource.Success -> {
-                    LazyColumn(
-                        modifier = Modifier
-                            .padding(top = 4.dp)
-                            .weight(1f)
-                            .fillMaxWidth(),
-                        state = scrollState
-                    ) {
-                        items(listOfMsgs) {
-                            when (it.senderId == currentUser!!._id) {
-                                true -> {
-                                    SentMessageRow(
-                                        text = it.content,
-                                        messageTime = "hh:mm",
-                                        messageStatus = if (it.isRead) MessageStatus.isRead else MessageStatus.isDelivered
-                                    )
-                                }
+        Modifier.padding(it)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp)
+                .background(Color.White)
+                .focusable()
+                .wrapContentHeight()
+                .imePadding()
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = { keyboardController?.hide() })
+                }
+                .systemBarsPadding() // Apply system bars padding
+        ) {
+            if (getAllMessagesResult is Resource.Loading) {
+                CircularProgressIndicator(Modifier.padding(top = 50.dp))
+            } else {
+                when (getAllMessagesResult) {
+                    is Resource.Success -> {
+                        LazyColumn(
+                            modifier = Modifier
+                                .padding(top = 4.dp)
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            state = scrollState
+                        ) {
+                            items(listOfMsgs) {
+                                when (it.senderId == currentUser!!._id) {
+                                    true -> {
+                                        SentMessageRow(
+                                            text = it.content,
+                                            messageTime = "hh:mm",
+                                            messageStatus = if (it.isRead) MessageStatus.isRead else MessageStatus.isDelivered
+                                        )
+                                    }
 
-                                false -> {
-                                    ReceivedMessageRow(
-                                        text = it.content,
-                                        opponentName = "testing here",
-                                        quotedMessage = null,
-                                        messageTime = "hh:mm",
-                                    )
+                                    false -> {
+                                        ReceivedMessageRow(
+                                            text = it.content,
+                                            opponentName = "testing here",
+                                            quotedMessage = null,
+                                            messageTime = "hh:mm",
+                                        )
+                                    }
                                 }
                             }
                         }
+
                     }
 
+                    is Resource.Error -> {
+
+                    }
+
+                    else -> {}
                 }
-
-                is Resource.Error -> {
-
-                }
-
-                else -> {}
             }
+            ChatInput(
+                onMessageChange = {
+                    actualChatScreenViewModel.addMessage(chatId, it)
+                },
+                actualChatScreenViewModel = actualChatScreenViewModel,
+            )
         }
-        ChatInput(
-            onMessageChange = {
-                actualChatScreenViewModel.addMessage(chatId, it)
-            },
-            onFocusEvent = {
-                isChatInputFocus = it
-            }
-        )
+
     }
 }
 
 @Composable
 fun ChatAppBar(
     navigator: DestinationsNavigator,
-    user: UserX?
+    user: UserX?,
+    actualChatScreenViewModel: ActualChatScreenViewModel
 ) {
     user?.let {
         Row(
             Modifier
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .padding(7.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -210,7 +223,11 @@ fun ChatAppBar(
                         color = Color.Black
                     )
                     Text(
-                        text = if (user.isOnline == true) "Online" else user.lastSeen.toString(),
+                        text = if (actualChatScreenViewModel.isTyping.value) {
+                            "Typing..."
+                        } else {
+                            if (user.isOnline == true) "Online" else user.lastSeen.toString()
+                        },
                         fontSize = 13.sp,
                         color = IconsColor
                     )
@@ -231,7 +248,7 @@ fun ChatAppBar(
 fun ChatInput(
     modifier: Modifier = Modifier,
     onMessageChange: (String) -> Unit,
-    onFocusEvent: (Boolean) -> Unit
+    actualChatScreenViewModel: ActualChatScreenViewModel,
 ) {
     val context = LocalContext.current
     var input by remember { mutableStateOf(TextFieldValue("")) }
@@ -239,6 +256,16 @@ fun ChatInput(
 
     LaunchedEffect(input.text) {
         textEmpty = input.text.trim().isEmpty()
+    }
+
+    var debouncedText by remember { mutableStateOf("") }
+
+    LaunchedEffect(input.text) {
+        delay(500)
+
+        debouncedText = input.text.trim()
+
+        actualChatScreenViewModel.typingFunctionality(debouncedText.isNotEmpty())
     }
 
     Row(
@@ -253,7 +280,9 @@ fun ChatInput(
                 .weight(1f)
                 .focusable(true),
             value = input,
-            onValueChange = { input = it },
+            onValueChange = {
+                input = it
+            },
             colors = TextFieldDefaults.textFieldColors(
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
@@ -306,9 +335,7 @@ fun ChatInput(
                         )
                     }
                 }
-
             }
-
         )
 
         IconButton(

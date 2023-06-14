@@ -2,7 +2,6 @@ package com.example.instagram.other
 
 import android.Manifest
 import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -27,6 +26,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
@@ -41,6 +41,9 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import com.example.instagram.R
 import com.example.instagram.models.ChatRowData
 import com.example.instagram.ui.theme.ProfileColor
@@ -502,6 +505,54 @@ fun ReceivedMessageRow(
                 )
             }
         )
+    }
+}
+
+
+@Composable
+fun DisposableEffectWithLifeCycle(
+    onStop: () -> Unit,
+    onResume: () -> Unit,
+) {
+    // Safely update the current lambdas when a new one is provided
+    val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
+    val currentOnStop by rememberUpdatedState(onStop)
+    val currentOnResume by rememberUpdatedState(onResume)
+    // If `lifecycleOwner` changes, dispose and reset the effect
+    DisposableEffect(lifecycleOwner) {
+        // Create an observer that triggers our remembered callbacks
+        // for lifecycle events
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_CREATE -> {
+                }
+
+                Lifecycle.Event.ON_START -> {
+                }
+
+                Lifecycle.Event.ON_RESUME -> {
+                    currentOnResume()
+                }
+
+                Lifecycle.Event.ON_PAUSE -> {
+                }
+
+                Lifecycle.Event.ON_STOP -> {
+                    currentOnStop()
+                }
+
+                Lifecycle.Event.ON_DESTROY -> {
+                }
+
+                else -> {}
+            }
+        }
+        // Add the observer to the lifecycle
+        lifecycleOwner.lifecycle.addObserver(observer)
+        // When the effect leaves the Composition, remove the observer
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 }
 

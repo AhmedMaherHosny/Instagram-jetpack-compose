@@ -17,13 +17,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.socket.client.IO
 import io.socket.client.Socket
 import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import timber.log.Timber
 import java.net.URISyntaxException
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 
@@ -48,26 +46,31 @@ class ActualChatScreenViewModel @Inject constructor(
         private set
     var messagesLoadedFirstTime = mutableStateOf(false)
         private set
+
+    var isTyping = mutableStateOf(false)
+        private set
+
     private lateinit var mSocket: Socket
+    private lateinit var ctid: String
 
     init {
-
         connectToSocket()
         listenToNewMsgs()
+        listenToTyping()
 
         savedStateHandle.get<String>("receiverId")?.let {
             getChatHeader(it)
         }
         savedStateHandle.get<String>("chatId")?.let {
+            ctid = it
             mSocket.emit("joinRoom", it)
             getAllMessages(it)
         }
-
     }
 
     override fun onCleared() {
         super.onCleared()
-        mSocket.disconnect()
+        disconnectTheSocket()
     }
 
     private fun getChatHeader(id: String) {
@@ -135,7 +138,7 @@ class ActualChatScreenViewModel @Inject constructor(
         val options = IO.Options()
         options.forceNew = true
         try {
-            mSocket = IO.socket("http://192.168.1.15:5000", options)
+            mSocket = IO.socket("http://192.168.1.23:5000", options)
             mSocket.connect()
         } catch (e: URISyntaxException) {
             e.printStackTrace()
@@ -150,6 +153,35 @@ class ActualChatScreenViewModel @Inject constructor(
             val message = gson.fromJson(it[0].toString(), Message::class.java)
             _allMessages.add(message) // need to fix scroll to new msg
             messageInserted.value = true
+            isTyping.value = false
         }
     }
+
+    private fun listenToTyping() {
+        mSocket.on("typing") {
+            val gson = Gson()
+            val senderId: String? = gson.fromJson(it[0].toString(), String::class.java)
+            isTyping.value = senderId != null
+        }
+    }
+
+    fun typingFunctionality(isTyping: Boolean) {
+        if (isTyping) {
+            mSocket.emit("typing", JSONObject().apply {
+                put("chatId", ctid)
+                put("senderId", currentUser!!._id)
+            })
+            return
+        }
+        mSocket.emit("typing", JSONObject().apply {
+            put("chatId", ctid)
+            put("senderId", "")
+        })
+    }
+
+    private fun disconnectTheSocket() {
+        mSocket.disconnect()
+    }
+
+
 }

@@ -52,7 +52,7 @@ object AppModule {
             .addInterceptor(logging)
             .build()
         return Retrofit.Builder()
-            .baseUrl("http://192.168.1.15:5000")
+            .baseUrl("http://192.168.1.23:5000")
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
             .build()
