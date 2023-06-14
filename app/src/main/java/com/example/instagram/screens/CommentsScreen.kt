@@ -60,6 +60,7 @@ import com.example.instagram.models.CommentData
 import com.example.instagram.models.CommentsItem
 import com.example.instagram.other.LoadingItem
 import com.example.instagram.other.currentUser
+import com.example.instagram.other.extractDateTimeComponents
 import com.example.instagram.ui.theme.BackgroundColor
 import com.example.instagram.ui.theme.ExplorerColor
 import com.example.instagram.ui.theme.IconsColor
@@ -67,6 +68,7 @@ import com.example.instagram.ui.theme.PostColor
 import com.example.instagram.viewmodels.HomeViewModel
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import timber.log.Timber
+import java.util.Calendar
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -314,8 +316,14 @@ fun CommentItem(
                         )
                     }
                     Spacer(modifier = Modifier.width(4.dp))
+                    val date = extractDateTimeComponents(comment.createdAt)
+                    val amPm = date["amPm"] as Int
+                    val amPmIndicator = if (amPm == Calendar.AM) "AM" else "PM"
+                    val dateString =
+                        "${date["year"]}/${date["month"]}/${date["day"]} ${date["hour"]}:${date["minute"]} $amPmIndicator"
+
                     Text(
-                        text = comment.createdAt!!,
+                        text = dateString,
                         fontSize = 10.sp,
                         color = IconsColor,
                         fontWeight = FontWeight.Bold,

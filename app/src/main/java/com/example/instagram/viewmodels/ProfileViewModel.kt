@@ -10,6 +10,8 @@ import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import com.example.instagram.api.ApiServices
 import com.example.instagram.api.Resource
+import com.example.instagram.models.GetChatResponse
+import com.example.instagram.models.GetChatResponsex
 import com.example.instagram.models.ProfileResponse
 import com.example.instagram.other.MyPreference
 import com.example.instagram.other.NoRippleInteractionSource
@@ -32,6 +34,10 @@ class ProfileViewModel @Inject constructor(
     private val _getProfileResult =
         MutableStateFlow<Resource<ProfileResponse>>(Resource.Initial())
     val getProfileResult: MutableStateFlow<Resource<ProfileResponse>> get() = _getProfileResult
+
+    private var _getChatResult =
+        MutableStateFlow<Resource<GetChatResponsex>>(Resource.Initial())
+    val getChatResult: MutableStateFlow<Resource<GetChatResponsex>> get() = _getChatResult
     var profileId: String by mutableStateOf("ahmed")
 
     fun getProfile(userId: String) {
@@ -79,6 +85,35 @@ class ProfileViewModel @Inject constructor(
     val profilePostsPager = Pager(PagingConfig(pageSize = 5)) {
         profilePostsPagingSourceFactory.create(profileId)
     }.flow.cachedIn(viewModelScope)
+
+    fun getChat(userId: String) {
+        viewModelScope.launch {
+            try {
+                _getChatResult.value = Resource.Loading()
+                val response = async { apiServices.getChat(userId) }
+                when {
+                    response.await().isSuccessful -> {
+                        _getChatResult.value =
+                            Resource.Success(response.await().body()!!)
+                    }
+
+                    else -> {
+                        val errorBody = response.await().errorBody()?.string()
+                        val errorMessage = JSONObject(errorBody!!).getString("message")
+                        _getChatResult.value = Resource.Error(errorMessage)
+                    }
+                }
+            } catch (e: Exception) {
+                _getChatResult.value =
+                    Resource.Error(e.message ?: "Unknown error occurred")
+            }
+        }
+    }
+
+    fun clearGetChatResult(){
+        _getChatResult = MutableStateFlow(Resource.Initial())
+    }
+
 
 }
 

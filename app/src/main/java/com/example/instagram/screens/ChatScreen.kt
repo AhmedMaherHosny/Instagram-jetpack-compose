@@ -144,11 +144,7 @@ fun ChatItem(
                 model = chat.members.first().avatar,
                 contentDescription = null,
                 modifier = Modifier
-//                    .border(
-//                        width = 2.dp,
-//                        brush = if (true == false) UserStoryBorder else UserNotStoryBorder,
-//                        shape = CircleShape
-//                    )
+
                     .padding(3.dp)
                     .size(60.dp)
                     .clip(CircleShape)

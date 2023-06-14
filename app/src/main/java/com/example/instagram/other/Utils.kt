@@ -2,7 +2,6 @@ package com.example.instagram.other
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.layout.Placeable
@@ -11,6 +10,9 @@ import com.example.instagram.models.UserX
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 
 var currentUser: UserX? = null
@@ -96,3 +98,30 @@ fun calculateChatWidthAndHeight(
         chatRowData.rowHeight = message.height
     }
 }
+
+fun extractDateTimeComponents(dateTimeString: String?): Map<String, Any> {
+    val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.ENGLISH)
+    val date = inputFormat.parse(dateTimeString)
+
+    val calendar = Calendar.getInstance()
+    calendar.time = date!!
+
+    val dateTimeComponents = mutableMapOf<String, Any>()
+    dateTimeComponents["year"] = calendar.get(Calendar.YEAR)
+    dateTimeComponents["month"] = calendar.get(Calendar.MONTH) + 1
+    dateTimeComponents["day"] = calendar.get(Calendar.DAY_OF_MONTH)
+
+    // Pad the hour value with leading zero if necessary
+    val hour = calendar.get(Calendar.HOUR)
+    dateTimeComponents["hour"] = if (hour == 0) 12 else hour
+    dateTimeComponents["hour"] = String.format("%02d", hour)
+
+    // Pad the minute value with leading zero if necessary
+    val minute = calendar.get(Calendar.MINUTE)
+    dateTimeComponents["minute"] = String.format("%02d", minute)
+
+    dateTimeComponents["amPm"] = calendar.get(Calendar.AM_PM)
+
+    return dateTimeComponents
+}
+

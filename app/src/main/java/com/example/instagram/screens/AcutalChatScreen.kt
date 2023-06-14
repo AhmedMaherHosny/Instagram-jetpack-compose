@@ -55,6 +55,7 @@ import com.example.instagram.other.MessageStatus
 import com.example.instagram.other.ReceivedMessageRow
 import com.example.instagram.other.SentMessageRow
 import com.example.instagram.other.currentUser
+import com.example.instagram.other.extractDateTimeComponents
 import com.example.instagram.other.noRippleClickable
 import com.example.instagram.ui.theme.IconsColor
 import com.example.instagram.ui.theme.SendMessage
@@ -63,6 +64,7 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.delay
 import timber.log.Timber
+import java.util.Calendar
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -139,11 +141,14 @@ fun ActualChatScreenWidget(
                             state = scrollState
                         ) {
                             items(listOfMsgs) {
+                                val date = extractDateTimeComponents(it.createdAt)
+                                val amPm = date["amPm"] as Int
+                                val amPmIndicator = if (amPm == Calendar.AM) "AM" else "PM"
                                 when (it.senderId == currentUser!!._id) {
                                     true -> {
                                         SentMessageRow(
                                             text = it.content,
-                                            messageTime = "hh:mm",
+                                            messageTime = "${date["hour"]}:${date["minute"]} $amPmIndicator",
                                             messageStatus = if (it.isRead) MessageStatus.isRead else MessageStatus.isDelivered
                                         )
                                     }
@@ -153,7 +158,7 @@ fun ActualChatScreenWidget(
                                             text = it.content,
                                             opponentName = "testing here",
                                             quotedMessage = null,
-                                            messageTime = "hh:mm",
+                                            messageTime = "${date["hour"]}:${date["minute"]} $amPmIndicator",
                                         )
                                     }
                                 }

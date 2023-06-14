@@ -11,11 +11,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
@@ -24,6 +24,8 @@ import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -32,6 +34,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +57,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
 import com.example.instagram.R
 import com.example.instagram.api.Resource
+import com.example.instagram.destinations.ActualChatScreenDestination
 import com.example.instagram.destinations.EditProfileScreenDestination
 import com.example.instagram.models.ProfilePostsItem
 import com.example.instagram.models.ProfileResponse
@@ -101,6 +105,7 @@ fun ProfileScreenWidget(
                         modifier = Modifier,
                         navigator,
                         profileViewModel,
+                        userId
                     )
                     Spacer(modifier = Modifier.height(30.dp))
                     LazyVerticalGrid(
@@ -110,9 +115,6 @@ fun ProfileScreenWidget(
                     ) {
                         items(
                             count = profilePostsList.itemCount,
-//                            key = {
-//                                profilePostsList[it]?._id!!
-//                            }
                         ) {
                             PostPicItem(
                                 modifier = Modifier
@@ -151,8 +153,26 @@ fun CardView(
     modifier: Modifier,
     navigator: DestinationsNavigator,
     profileViewModel: ProfileViewModel,
+    userId: String,
 ) {
+    val dropdownMenuItems = listOf("Message")
+    var expanded by remember { mutableStateOf(false) }
     var textButton by remember { mutableStateOf("") }
+    val getChatResult by profileViewModel.getChatResult.collectAsState()
+        if (getChatResult is Resource.Success) {
+            navigator.navigate(
+                ActualChatScreenDestination(
+                    chatId = getChatResult.data?.chat?._id!!,
+                    receiverId = userId
+                )
+            )
+            profileViewModel.clearGetChatResult()
+        }
+    fun onMenuItemSelected(item: String) {
+        if (item == "Message") {
+            profileViewModel.getChat(userId)
+        }
+    }
     Card(
         modifier = modifier
             .shadow(20.dp, RoundedCornerShape(bottomStart = 35.dp, bottomEnd = 35.dp))
@@ -165,30 +185,54 @@ fun CardView(
             modifier = Modifier
                 .padding(20.dp)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .offset(y = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+            Column(
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "back",
-                    modifier = Modifier.clickable(
-                        indication = null,
-                        interactionSource = profileViewModel.noRippleInteractionSource
-                    ) { navigator.popBackStack() },
-                )
-                Icon(
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = "Menu",
-                    modifier = Modifier.clickable(
-                        indication = null,
-                        interactionSource = profileViewModel.noRippleInteractionSource
-                    ) { }
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "back",
+                        modifier = Modifier.clickable(
+                            indication = null,
+                            interactionSource = profileViewModel.noRippleInteractionSource
+                        ) { navigator.popBackStack() },
+                    )
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = "Menu",
+                        modifier = Modifier.clickable(
+                            indication = null,
+                            interactionSource = profileViewModel.noRippleInteractionSource
+                        ) { expanded = !expanded }
+                    )
+                }
+                if (expanded) {
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier
+                            .align(Alignment.End)
+                            .wrapContentWidth(Alignment.End)
+                    ) {
+                        for (item in dropdownMenuItems) {
+                            DropdownMenuItem(
+                                onClick = {
+                                    onMenuItemSelected(item)
+                                    expanded = false
+                                }
+                            ) {
+                                Text(item)
+                            }
+                        }
+                    }
+                }
             }
+
+
             /*----------------------end of top bar-----------------------*/
 
             AsyncImage(
@@ -309,7 +353,7 @@ fun CardView(
             if (response.isCurrentUser == true) {
                 Button(
                     onClick = {
-                              navigator.navigate(EditProfileScreenDestination)
+                        navigator.navigate(EditProfileScreenDestination)
                     },
                     interactionSource = profileViewModel.noRippleInteractionSource,
                     modifier = Modifier

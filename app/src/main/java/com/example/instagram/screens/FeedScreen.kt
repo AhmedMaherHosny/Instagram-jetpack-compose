@@ -43,6 +43,7 @@ import com.example.instagram.destinations.ProfileScreenDestination
 import com.example.instagram.models.*
 import com.example.instagram.other.LoadingItem
 import com.example.instagram.other.NoRippleInteractionSource
+import com.example.instagram.other.extractDateTimeComponents
 import com.example.instagram.ui.theme.*
 import com.example.instagram.viewmodels.HomeViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -51,6 +52,7 @@ import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import java.util.Calendar
 
 @Composable
 fun FeedScreenWidget(
@@ -396,6 +398,11 @@ fun PostItem(
     homeViewModel: HomeViewModel,
     navigator: DestinationsNavigator,
 ) {
+    val date = extractDateTimeComponents(followingPostsItem?.createdAt)
+    val amPm = date["amPm"] as Int
+    val amPmIndicator = if (amPm == Calendar.AM) "AM" else "PM"
+    val dateString =
+        "${date["year"]}/${date["month"]}/${date["day"]} ${date["hour"]}:${date["minute"]} $amPmIndicator"
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -435,7 +442,7 @@ fun PostItem(
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = followingPostsItem.createdAt!!,
+                            text = dateString,
                             fontSize = 10.sp,
                             color = PostColor
                         )

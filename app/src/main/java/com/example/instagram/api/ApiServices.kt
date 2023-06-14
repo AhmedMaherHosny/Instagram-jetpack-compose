@@ -81,4 +81,9 @@ interface ApiServices {
     @FormUrlEncoded
     @POST("/api/message/")
     suspend fun addMessage(@Field("chatId") chatId: String, @Field("content") content: String): Response<MessageHold>
+
+    @POST("/api/chat/{id}")
+    suspend fun getChat(@Path("id") id: String): Response<GetChatResponsex>
+
+
 }
