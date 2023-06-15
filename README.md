@@ -3,9 +3,9 @@
 This readme file provides an overview of the libraries used in the Instagram app developed using Jetpack Compose, Kotlin, and the MVVM (Model-View-ViewModel) architecture. Below is a list of the libraries used in the project along with their purposes.
 
 ## Screen Shots
-![screen one][https://github.com/AhmedMaherHosny/Instagram-jetpack-compose/blob/master/screen_shots/1.jpg]
-![screen two][https://github.com/AhmedMaherHosny/Instagram-jetpack-compose/blob/master/screen_shots/2.jpg]
-![screen three][https://github.com/AhmedMaherHosny/Instagram-jetpack-compose/blob/master/screen_shots/3.jpg]
+![screen one](https://github.com/AhmedMaherHosny/Instagram-jetpack-compose/blob/master/screen_shots/1.jpg)
+![screen two](https://github.com/AhmedMaherHosny/Instagram-jetpack-compose/blob/master/screen_shots/2.jpg)
+![screen three](https://github.com/AhmedMaherHosny/Instagram-jetpack-compose/blob/master/screen_shots/3.jpg)
 
 ## Libraries Used
 
